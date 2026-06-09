@@ -21,8 +21,7 @@ The pipeline is orchestrated with:
 | Resource | Link |
 |---|---|
 | GitHub Repository | https://github.com/aniliter-cloud/ml-ops-group-project |
-| Kaggle Notebook (v1) | https://www.kaggle.com/code/anilg25ait2009/mlops-assignment-2-fine-tuning-classification |
-| Kaggle Notebook (v2) | https://www.kaggle.com/code/anilg25ait2009/mlops-group-projects/ |
+| Kaggle Notebook  | https://www.kaggle.com/code/anilg25ait2009/mlops-group-projects/ |
 | Hugging Face Model | https://huggingface.co/Maxii2tj/emotion-distilbert |
 | W&B Project Dashboard | https://wandb.ai/maxi-i2tj-na/mlops-group-project |
 | Docker Image | *(add Docker Hub URL here)* |
