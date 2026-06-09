@@ -1,24 +1,52 @@
-# Secrets — never commit
-.env
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
 
-# Data files — too large, not committed
-data/
+# Virtual environments
+venv/
+env/
+.venv/
 
-# Trainer output and checkpoints
-results*/
-checkpoint-*/
-
-# Evaluation output — uploaded to W&B instead
-eval_report.json
-
-# Jupyter checkpoints
+# Jupyter
 .ipynb_checkpoints/
+*.ipynb_checkpoints
 
-# W&B local run directories
+# Data — do NOT commit large dataset files
+data/
+*.csv
+*.tsv
+*.parquet
+*.arrow
+*.jsonl
+
+# Model weights — use Hugging Face Hub instead
+*.bin
+*.pt
+*.pth
+*.safetensors
+results-v1/
+results-v2/
+
+# W&B local cache
 wandb/
 
-# Python cache
-__pycache__/
+# Eval artifacts (uploaded to W&B)
+eval_report.json
 
-# macOS
+# Environment / secrets — NEVER commit these
+.env
+*.env
+
+# OS
 .DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
