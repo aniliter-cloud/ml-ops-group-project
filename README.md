@@ -18,50 +18,34 @@ The pipeline is orchestrated with:
 
 ## Pipeline Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                     dair-ai/emotion dataset                      │
-│                  ~20k samples · 6 emotion classes                │
-└───────────────────────────────┬─────────────────────────────────┘
-                                │
-                                ▼
-┌─────────────────────────────────────────────────────────────────┐
-│              Data Cleaning & Tokenisation (notebook)             │
-│        lowercase · strip URLs/mentions · DistilBertTokenizer     │
-└───────────────────────────────┬─────────────────────────────────┘
-                                │
-                                ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                   Kaggle Notebook · GPU T4                       │
-│  ┌──────────────────────────┐  ┌──────────────────────────────┐ │
-│  │       Version 1          │  │         Version 2            │ │
-│  │  lr=3e-5 · batch=16      │  │   lr=5e-5 · batch=32         │ │
-│  │  epochs=3                │  │   epochs=3                   │ │
-│  └────────────┬─────────────┘  └──────────────┬───────────────┘ │
-└───────────────┼──────────────────────────────┬─┘────────────────┘
-                │                              │
-        ┌───────▼───────┐            ┌─────────▼──────────┐
-        │ Weights&Biases│            │  Hugging Face Hub   │
-        │  loss · acc   │            │  model + tokenizer  │
-        │  F1 · config  │            │  publicly pullable  │
-        └───────────────┘            └─────────┬───────────┘
-                                               │
-                                     ┌─────────▼───────────┐
-                                     │    Docker image      │
-                                     │  python:3.11-slim    │
-                                     │  inference only      │
-                                     └─────────┬────────────┘
-                                               │
-┌──────────────────────────────────────────────▼─────────────────┐
-│                      GitHub Repository                          │
-│          src/ · .github/workflows/ · Dockerfile                 │
-└────────────────────────┬───────────────────┬────────────────────┘
-                         │                   │
-              ┌──────────▼──────┐  ┌─────────▼──────────────┐
-              │   CI workflow    │  │   Inference workflow    │
-              │ flake8 · develop │  │ workflow_dispatch       │
-              │ push/PR to main  │  │ → src/inference.py      │
-              └─────────────────┘  └────────────────────────┘
+```mermaid
+flowchart TD
+    A[" dair-ai/emotion dataset\n~20k samples · 6 emotion classes"]
+    B[" Data Cleaning & Tokenisation\nlowercase · strip URLs/mentions · DistilBertTokenizer"]
+
+    subgraph KAGGLE["  Kaggle Notebook · GPU T4"]
+        V1["Version 1\nlr=3e-5 · batch=16 · epochs=3"]
+        V2["Version 2\nlr=5e-5 · batch=32 · epochs=3"]
+    end
+
+    C[" Weights & Biases\nloss · accuracy · F1 · artifacts"]
+    D[" Hugging Face Hub\nmodel + tokenizer · publicly pullable"]
+    E[" Docker Image\npython:3.11-slim · inference only"]
+
+    subgraph GITHUB["  GitHub Repository"]
+        G1["CI Workflow\nflake8 · on push to develop"]
+        G2["Inference Workflow\nworkflow_dispatch · src/inference.py"]
+    end
+
+    A --> B
+    B --> KAGGLE
+    V1 --> C
+    V2 --> C
+    V1 --> D
+    V2 --> D
+    D --> E
+    E --> GITHUB
+    D --> GITHUB
 ```
 
 ---
