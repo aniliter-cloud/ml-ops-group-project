@@ -1,5 +1,5 @@
 # Inference-only container for the emotion detection model.
-# jiitravi account is being used, but for testing with group project, this will be switched to admin account.
+# jiitravi account is being used, but for testing with group project, this will be switched to admin account - Maxii2tj/emotion-distilbert.
 # Build:  docker build --build-arg HF_MODEL_NAME=jiitravi/emotion-distilbert -t jiitravi/mlops-emotion:latest .
 # Test:   docker run --rm -e INPUT_TEXT="I feel amazing today" jiitravi/mlops-emotion:latest
 # Push:   docker push jiitravi/mlops-emotion:latest
@@ -7,9 +7,10 @@
 FROM python:3.11-slim
 
 # Model repo — override at build time to switch models without changing code
-ARG HF_MODEL_NAME=jiitravi/emotion-distilbert
+ARG HF_MODEL_NAME=Maxii2tj/emotion-distilbert
 ENV HF_MODEL_NAME=${HF_MODEL_NAME}
 
+RUN echo "Using Hugging Face model repo: ${HF_MODEL_NAME}"
 WORKDIR /app
 
 # Install CPU-only torch first (keeps image lean — no CUDA drivers needed for inference)
