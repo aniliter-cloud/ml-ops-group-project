@@ -9,7 +9,7 @@ on:
       hf_model_name:
         description: 'Hugging Face model repo'
         required: false
-        default: 'jiitravi/emotion-distilbert'
+        default: 'Maxii2tj/emotion-distilbert'
 
 jobs:
   infer:

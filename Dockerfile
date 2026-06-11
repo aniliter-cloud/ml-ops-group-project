@@ -1,8 +1,8 @@
 # Inference-only container for the emotion detection model.
 # jiitravi account is being used, but for testing with group project, this will be switched to admin account - Maxii2tj/emotion-distilbert.
-# Build:  docker build --build-arg HF_MODEL_NAME=jiitravi/emotion-distilbert -t jiitravi/mlops-emotion:latest .
-# Test:   docker run --rm -e INPUT_TEXT="I feel amazing today" jiitravi/mlops-emotion:latest
-# Push:   docker push jiitravi/mlops-emotion:latest
+# Build:  docker build --build-arg HF_MODEL_NAME=jiitravi/emotion-distilbert -t local/mlops-emotion:latest .
+# Test:   docker run --rm -e INPUT_TEXT="I feel amazing today" local/mlops-emotion:latest
+# Push:   docker push local/mlops-emotion:latest
 
 FROM python:3.11-slim
 

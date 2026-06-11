@@ -4,14 +4,14 @@ Reads input from environment variables — no hardcoded values.
 
 Environment variables:
   INPUT_TEXT      (required) Text to classify
-  HF_MODEL_NAME   (optional) Hugging Face repo, default: jiitravi/emotion-distilbert
+  HF_MODEL_NAME   (optional) Hugging Face repo, default: Maxii2tj/emotion-distilbert
   HF_TOKEN        (optional) For private repos; leave unset for public models
 
 Run locally:
   INPUT_TEXT="I feel amazing today" python src/inference.py
 
 Docker:
-  docker run --rm -e INPUT_TEXT="I feel amazing today" jiitravi/mlops-emotion:latest
+  docker run --rm -e INPUT_TEXT="I feel amazing today" local/mlops-emotion:latest
 """
 import os
 import sys
@@ -19,7 +19,7 @@ import sys
 from transformers import pipeline
 
 
-HF_MODEL_NAME = os.environ.get("HF_MODEL_NAME", "jiitravi/emotion-distilbert")
+HF_MODEL_NAME = os.environ.get("HF_MODEL_NAME", "Maxii2tj/emotion-distilbert")
 INPUT_TEXT = os.environ.get("INPUT_TEXT", "").strip()
 HF_TOKEN = os.environ.get("HF_TOKEN") or None  # None = unauthenticated (public model)
 
