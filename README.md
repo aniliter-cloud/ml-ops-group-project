@@ -118,7 +118,7 @@ flowchart TD
 **Parameters:** ~66M
 **HF Model Card:** https://huggingface.co/distilbert-base-uncased
 
-DistilBERT is a knowledge-distilled, lighter version of BERT — approximately 40% smaller and 60% faster — making it well-suited to Kaggle's free GPU tier. The uncased variant was chosen because emotion classification depends on semantic meaning rather than capitalisation patterns, reducing vocabulary size and improving token consistency. With 6 output labels loaded from `id2label.json`, and a max token length of **128** (sufficient for short tweets — typically under 30 tokens — and far more GPU-efficient than the initial 512), the model fits comfortably within Kaggle's free GPU hours, with each version training in under 6 minutes on a T4 GPU.
+DistilBERT is a knowledge-distilled, lighter version of BERT — approximately 40% smaller and 60% faster — making it well-suited to Kaggle's free GPU tier. The uncased variant was chosen because emotion classification depends on semantic meaning rather than capitalisation patterns, reducing vocabulary size and improving token consistency. With 6 output labels loaded from `id2label.json`, and a max token length of **512** (sufficient for short tweets — typically under 30 tokens — and far more GPU-efficient than the initial 512), the model fits comfortably within Kaggle's free GPU hours, with each version training in under 6 minutes on a T4 GPU.
 
 ---
 
