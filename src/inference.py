@@ -1,40 +1,63 @@
 """
-Task 6/7 - Run emotion classification inference.
-Reads input from environment variables — no hardcoded values.
+Emotion Classification Inference.
 
-Environment variables:
-  INPUT_TEXT      (required) Text to classify
-  HF_MODEL_NAME   (optional) Hugging Face repo, default: Maxii2tj/emotion-distilbert
-  HF_TOKEN        (optional) For private repos; leave unset for public models
-
-Run locally:
-  INPUT_TEXT="I feel amazing today" python src/inference.py
-
-Docker:
-  docker run --rm -e INPUT_TEXT="I feel amazing today" local/mlops-emotion:latest
+Environment Variables
+---------------------
+INPUT_TEXT    : Required. Text to classify.
+HF_MODEL_NAME : Optional. Hugging Face model repo.
+                Defaults to Maxii2tj/emotion-distilbert.
+HF_TOKEN      : Optional. Required only for private Hugging Face models.
 """
+
 import os
 import sys
 
 from transformers import pipeline
 
 
-HF_MODEL_NAME = os.environ.get("HF_MODEL_NAME", "Maxii2tj/emotion-distilbert")
-INPUT_TEXT = os.environ.get("INPUT_TEXT", "").strip()
-HF_TOKEN = os.environ.get("HF_TOKEN") or None  # None = unauthenticated (public model)
+DEFAULT_MODEL = "Maxii2tj/emotion-distilbert"
 
-if not INPUT_TEXT:
-    print("Error: INPUT_TEXT environment variable is not set or empty.", file=sys.stderr)
-    sys.exit(1)
 
-print(f"Model : {HF_MODEL_NAME}")
-print(f"Input : {INPUT_TEXT}")
+def main() -> None:
+    model_name = os.getenv("HF_MODEL_NAME", DEFAULT_MODEL)
+    input_text = os.getenv("INPUT_TEXT", "").strip()
+    hf_token = os.getenv("HF_TOKEN")
 
-classifier = pipeline(
-    "text-classification",
-    model=HF_MODEL_NAME,
-    token=HF_TOKEN,
-)
+    if not input_text:
+        print(
+            "Error: INPUT_TEXT environment variable is missing or empty.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
-result = classifier(INPUT_TEXT)[0]
-print(f"Predicted emotion : {result['label']}  (confidence: {result['score']:.4f})")
+    print(f"Model : {model_name}")
+    print(f"Input : {input_text}")
+    print(
+        "Authentication : "
+        + ("Enabled" if hf_token else "Anonymous/Public model access")
+    )
+
+    pipeline_args = {
+        "task": "text-classification",
+        "model": model_name,
+    }
+
+    if hf_token:
+        pipeline_args["token"] = hf_token
+
+    try:
+        classifier = pipeline(**pipeline_args)
+        result = classifier(input_text)[0]
+
+        print(
+            f"Predicted emotion : {result['label']} "
+            f"(confidence: {result['score']:.4f})"
+        )
+
+    except Exception as exc:
+        print(f"Inference failed: {exc}", file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

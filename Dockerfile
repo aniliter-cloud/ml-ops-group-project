@@ -1,8 +1,9 @@
 # Inference-only container for the emotion detection model.
-# jiitravi account is being used, but for testing with group project, this will be switched to admin account - Maxii2tj/emotion-distilbert.
-# Build:  docker build --build-arg HF_MODEL_NAME=jiitravi/emotion-distilbert -t local/mlops-emotion:latest .
-# Test:   docker run --rm -e INPUT_TEXT="I feel amazing today" local/mlops-emotion:latest
-# Push:   docker push local/mlops-emotion:latest
+# Inference-only Docker image for the Emotion Detection model.
+# The Hugging Face model repository can be overridden at build time using HF_MODEL_NAME.
+# Build: docker build --build-arg HF_MODEL_NAME=Maxii2tj/emotion-distilbert -t maxii2tj/mlops-a3-inference:latest .
+# Test:  docker run --rm -e INPUT_TEXT="I feel amazing today" maxii2tj/mlops-a3-inference:latest
+# Push:  docker push maxii2tj/mlops-a3-inference:latest
 
 FROM python:3.11-slim
 

@@ -1,3 +1,4 @@
 # Minimal requirements for the Docker inference container (as training is already done)
+torch>=2.0.0
 transformers>=4.40.0
 huggingface_hub>=0.22.0
