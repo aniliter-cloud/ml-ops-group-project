@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+  emotion-inference:
+    image: maxii2tj/mlops-a3-inference:latest
+    container_name: emotion-inference
+
+    environment:
+      INPUT_TEXT: "I feel amazing today"
+      HF_MODEL_NAME: "Maxii2tj/emotion-distilbert"
+      HF_TOKEN: ${HF_TOKEN:-}
+
+    restart: "no"

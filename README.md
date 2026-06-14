@@ -58,7 +58,7 @@ flowchart TD
 | Kaggle Notebook | https://www.kaggle.com/code/anilg25ait2009/mlops-group-projects/ |
 | Hugging Face Model | https://huggingface.co/Maxii2tj/emotion-distilbert |
 | W&B Project Dashboard | https://wandb.ai/maxi-i2tj-na/mlops-group-project |
-| Docker Image | *(add Docker Hub URL here)* |
+| Docker Image | https://hub.docker.com/r/maxii2tj/mlops-a3-inference |
 
 ---
 
@@ -71,10 +71,13 @@ flowchart TD
 │       ├── ci.yml                  # Linting on push to develop
 │       └── inference.yml           # Manual inference trigger
 ├── src/
-│   └── inference.py                # Inference script
+│   ├── inference.py                # Inference script
+│   └── processing.py
 ├── Dockerfile                      # Inference container
-├── id2label.json                   # Label mapping (6 emotion classes)
+├── docker-compose.yml
 ├── requirements.txt
+├── requirements-inference.txt
+├── id2label.json                   Label mapping (6 emotion classes)
 └── README.md
 ```
 
@@ -98,7 +101,7 @@ flowchart TD
 | love | 1,304 | 8.2% |
 | surprise | 572 | 3.6% |
 
-> ⚠️ The dataset is imbalanced — `surprise` and `love` are under-represented. This is why **weighted F1** (not plain accuracy) is used as the primary comparison metric between versions.
+> The dataset is imbalanced — `surprise` and `love` are under-represented. This is why **weighted F1** (not plain accuracy) is used as the primary comparison metric between versions.
 
 ### Cleaning Steps Applied
 
@@ -130,7 +133,7 @@ DistilBERT is a knowledge-distilled, lighter version of BERT — approximately 4
 | Learning Rate | 3e-5 | 5e-5 |
 | Batch Size | 16 | 32 |
 | Epochs | 3 | **4** |
-| Max Token Length | **128** | **128** |
+| Max Token Length | **512** | **512** |
 | Weight Decay | 0.01 | 0.01 |
 | Warmup Steps | 100 | **200** |
 | Eval Strategy | epoch | epoch |
@@ -139,7 +142,7 @@ DistilBERT is a knowledge-distilled, lighter version of BERT — approximately 4
 
 ---
 
-## 🏆 Results — Version 1 vs Version 2
+## Results — Version 1 vs Version 2
 
 | Metric | Version 1 | Version 2 | Winner |
 |---|---|---|---|
@@ -160,7 +163,7 @@ DistilBERT is a knowledge-distilled, lighter version of BERT — approximately 4
 | fear | 0.88 | 0.89 | 224 |
 | surprise | 0.75 | 0.75 | 66 |
 
-### 🧠 Why Version 2 Won — Intuition
+### Why Version 2 Won — Intuition
 
 V1's validation F1 **peaked at epoch 2 (0.9391)** and slightly *declined* by epoch 3 (0.9382) — training loss kept falling (to 0.1996) while validation loss rose (0.2782 → 0.2889), an early sign of overfitting at `lr=3e-5, batch=16`.
 
@@ -226,23 +229,72 @@ The notebook will:
 
 ---
 
-## Running Inference Locally
+## Running Inference
+
+The trained emotion classification model can be executed using Docker Compose, Docker, or directly through the Python inference script.
+
+### Option 1: Run with Docker Compose (Recommended)
+
+Start the inference container using Docker Compose:
 
 ```bash
-# Pull the Docker image
-docker pull <your-dockerhub-username>/mlops-a3-inference:latest
+docker compose up
+```
 
-# Run inference
+> **Note:** The model is publicly available on Hugging Face, so no authentication is required. If the `HF_TOKEN` environment variable is set, Docker Compose will automatically use it for authenticated access.
+
+---
+
+### Option 2: Run with Docker
+
+Pull the latest Docker image from Docker Hub:
+
+```bash
+docker pull maxii2tj/mlops-a3-inference:latest
+```
+
+Run inference:
+
+```bash
+docker run --rm \
+  -e INPUT_TEXT="I feel so happy today" \
+  maxii2tj/mlops-a3-inference:latest
+```
+
+If you have a Hugging Face access token, you can optionally pass it:
+
+```bash
 docker run --rm \
   -e HF_TOKEN=$HF_TOKEN \
   -e INPUT_TEXT="I feel so happy today" \
-  <your-dockerhub-username>/mlops-a3-inference:latest
+  maxii2tj/mlops-a3-inference:latest
 ```
 
-Or run the script directly:
+> **Note:** Since the Hugging Face model is public, `HF_TOKEN` is optional. Providing it helps avoid Hugging Face rate limits and may speed up model downloads.
+
+---
+
+### Option 3: Run the Python Script Directly
+
+Install the inference dependencies:
 
 ```bash
-HF_TOKEN=$HF_TOKEN INPUT_TEXT="I feel so happy today" python src/inference.py
+pip install -r requirements-inference.txt
+```
+
+Run the inference script:
+
+```bash
+INPUT_TEXT="I feel so happy today" python3 src/inference.py
+```
+
+To use a different Hugging Face model or authenticate with Hugging Face (optional):
+
+```bash
+export HF_MODEL_NAME=Maxii2tj/emotion-distilbert
+export HF_TOKEN=<hugging_face_token>
+
+INPUT_TEXT="I feel so happy today" python3 src/inference.py
 ```
 
 ---
@@ -258,7 +310,7 @@ HF_TOKEN=$HF_TOKEN INPUT_TEXT="I feel so happy today" python src/inference.py
 - **Steps:** checkout → setup Python 3.11 → install deps → run `src/inference.py`
 - **Secrets required:** `HF_TOKEN` (set in GitHub → Settings → Secrets and Variables → Actions)
 
-> ⚠️ GitHub Actions is used **only for CI and inference, never for training** — all training runs on Kaggle Notebooks with GPU T4.
+> GitHub Actions is used **only for CI and inference, never for training** — all training runs on Kaggle Notebooks with GPU T4.
 
 ---
 
