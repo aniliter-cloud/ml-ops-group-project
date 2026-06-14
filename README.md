@@ -213,10 +213,10 @@ export WANDB_API_KEY=<wandb_key>
    - `HF_TOKEN`
 4. **Run all cells top to bottom** — both versions train sequentially in the same session, no kernel restart needed:
    - Cells 1–10: shared setup (install, auth, data, clean, tokenise @ `max_length=512`, datasets, metrics, `build_trainer`)
-   - Cell 11: **Version 1** trains (3 epochs) → logged to W&B as `distilbert-run-v1`
-   - Cell 12: **Version 2** trains (4 epochs) → logged to W&B as `distilbert-run-v2`
-   - Cell 13: side-by-side comparison, best version (v1) selected by F1
-   - Cell 14: best model pushed to Hugging Face Hub + final W&B summary
+  - Cell 12: **Version 1** trains (3 epochs) → logged to W&B as `distilbert-run-v1`
+  - Cell 14: **Version 2** trains (4 epochs) → logged to W&B as `distilbert-run-v2`
+  - Cell 16: side-by-side comparison, best version (v1) selected by F1
+  - Cell 17: best model pushed to Hugging Face Hub + final W&B summary
 
 The notebook will:
 - Load and clean the `dair-ai/emotion` dataset
