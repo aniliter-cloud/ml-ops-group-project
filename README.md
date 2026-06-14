@@ -21,15 +21,15 @@ The pipeline is orchestrated with:
 ```mermaid
 flowchart TD
     A[" dair-ai/emotion dataset\n~20k samples · 6 emotion classes"]
-    B[" Data Cleaning & Tokenisation\nlowercase · strip URLs/mentions · DistilBertTokenizer · max_length=128"]
+    B[" Data Cleaning & Tokenisation\nlowercase · strip URLs/mentions · DistilBertTokenizer · max_length=512"]
 
     subgraph KAGGLE["  Kaggle Notebook · GPU T4"]
-        V1["Version 1 — Baseline\nlr=3e-5 · batch=16 · epochs=3 · warmup=100"]
-        V2["Version 2 — Experiment (BEST)\nlr=5e-5 · batch=32 · epochs=4 · warmup=200"]
+        V1["Version 1 — Baseline (BEST)\nlr=3e-5 · batch=16 · epochs=3 · warmup=100"]
+        V2["Version 2 — Experiment\nlr=5e-5 · batch=32 · epochs=4 · warmup=200"]
     end
 
     C[" Weights & Biases\nloss · accuracy · F1 · hyperparams · artifacts"]
-    D[" Hugging Face Hub\nbest model (v2) + tokenizer · publicly pullable"]
+    D[" Hugging Face Hub\nbest model (v1) + tokenizer · publicly pullable"]
     E[" Docker Image\npython:3.11-slim · inference only"]
 
     subgraph GITHUB["  GitHub Repository"]
@@ -121,7 +121,7 @@ flowchart TD
 **Parameters:** ~66M
 **HF Model Card:** https://huggingface.co/distilbert-base-uncased
 
-DistilBERT is a knowledge-distilled, lighter version of BERT — approximately 40% smaller and 60% faster — making it well-suited to Kaggle's free GPU tier. The uncased variant was chosen because emotion classification depends on semantic meaning rather than capitalisation patterns, reducing vocabulary size and improving token consistency. With 6 output labels loaded from `id2label.json`, and a max token length of **512** (sufficient for short tweets — typically under 30 tokens — and far more GPU-efficient than the initial 512), the model fits comfortably within Kaggle's free GPU hours, with each version training in under 6 minutes on a T4 GPU.
+DistilBERT is a knowledge-distilled, lighter version of BERT — approximately 40% smaller and 60% faster — making it well-suited to Kaggle's free GPU tier. The uncased variant was chosen because emotion classification depends on semantic meaning rather than capitalisation patterns, reducing vocabulary size and improving token consistency. With 6 output labels loaded from `id2label.json`, and a max token length of **512** (sufficient for short tweets — typically under 30 tokens), the model fits comfortably within Kaggle's free GPU hours, with each version training in under 6 minutes on a T4 GPU.
 
 ---
 
@@ -146,10 +146,9 @@ DistilBERT is a knowledge-distilled, lighter version of BERT — approximately 4
 
 | Metric | Version 1 | Version 2 | Winner |
 |---|---|---|---|
-| Test Accuracy | 0.9265 | **0.9290** | V2 |
-| Test Weighted F1 | 0.9260 | **0.9284** | V2 |
-| Test Loss | 0.3166 | **0.2657** | V2 |
-| Best Val F1 (epoch) | 0.9391 (epoch 2) | **0.9452 (epoch 3)** | V2 |
+| Test Accuracy | **0.9290** | 0.9285 | V1 |
+| Test Weighted F1 | **0.9292** | 0.9285 | V1 |
+| Test Loss | 0.3157 | **0.2920** | V2 |
 | Training Time (T4 GPU) | ~4m 46s | ~5m 24s | V1 (faster) |
 
 ### Per-Class Weighted F1
@@ -158,20 +157,20 @@ DistilBERT is a knowledge-distilled, lighter version of BERT — approximately 4
 |---|---|---|---|
 | sadness | 0.97 | 0.97 | 581 |
 | joy | 0.95 | 0.95 | 695 |
-| love | 0.81 | 0.82 | 159 |
-| anger | 0.92 | 0.92 | 275 |
-| fear | 0.88 | 0.89 | 224 |
-| surprise | 0.75 | 0.75 | 66 |
+| love | 0.83 | 0.83 | 159 |
+| anger | 0.92 | 0.93 | 275 |
+| fear | 0.89 | 0.90 | 224 |
+| surprise | 0.78 | 0.74 | 66 |
 
-### Why Version 2 Won — Intuition
+### Why Version 1 Won — Intuition
 
-V1's validation F1 **peaked at epoch 2 (0.9391)** and slightly *declined* by epoch 3 (0.9382) — training loss kept falling (to 0.1996) while validation loss rose (0.2782 → 0.2889), an early sign of overfitting at `lr=3e-5, batch=16`.
+V1's conservative learning rate (`3e-5`) and smaller batch size (`16`) led to more stable, careful weight updates that generalised better to the unseen test set — achieving F1=0.9292 and accuracy=0.9290.
 
-V2 improved **monotonically through epoch 3 (val F1=0.9452)** before a mild dip at epoch 4 (val F1=0.9433). The larger batch size (32) gave smoother, lower-variance gradients, and the longer warmup (200 steps) safely absorbed the higher learning rate (5e-5) without destabilising early training.
+V2's higher learning rate (`5e-5`) and larger batch size (`32`) produced a lower test loss (0.2920 vs 0.3157), but the more aggressive training caused a slight drop in test F1 (0.9285) and accuracy (0.9285), suggesting marginal overfitting despite the extra warmup steps.
 
-`load_best_model_at_end=True` + `metric_for_best_model="f1"` ensured each version's **best checkpoint** (not necessarily its final epoch) was restored before final test evaluation — V1 restored its epoch-2 weights, V2 restored its epoch-3 weights.
+`load_best_model_at_end=True` + `metric_for_best_model="f1"` ensured each version's **best checkpoint** was restored before final test evaluation, so the reported metrics reflect each model's peak performance rather than its final epoch.
 
-> **Net result:** V2 reached a better optimum than V1, at the cost of only ~38 extra seconds of training — a clearly worthwhile trade-off. **Version 2 was selected as the best model** and pushed to Hugging Face Hub.
+> **Net result:** V1's conservative baseline outperformed V2 on accuracy and F1. **Version 1 was selected as the best model** and pushed to Hugging Face Hub.
 
 ---
 
@@ -213,19 +212,19 @@ export WANDB_API_KEY=<wandb_key>
    - `WANDB_API_KEY`
    - `HF_TOKEN`
 4. **Run all cells top to bottom** — both versions train sequentially in the same session, no kernel restart needed:
-   - Cells 1–10: shared setup (install, auth, data, clean, tokenise @ `max_length=128`, datasets, metrics, `build_trainer`)
+   - Cells 1–10: shared setup (install, auth, data, clean, tokenise @ `max_length=512`, datasets, metrics, `build_trainer`)
    - Cell 11: **Version 1** trains (3 epochs) → logged to W&B as `distilbert-run-v1`
    - Cell 12: **Version 2** trains (4 epochs) → logged to W&B as `distilbert-run-v2`
-   - Cell 13: side-by-side comparison, best version (v2) selected by F1
+   - Cell 13: side-by-side comparison, best version (v1) selected by F1
    - Cell 14: best model pushed to Hugging Face Hub + final W&B summary
 
 The notebook will:
 - Load and clean the `dair-ai/emotion` dataset
-- Tokenize using `DistilBertTokenizerFast` with `max_length=128`
+- Tokenize using `DistilBertTokenizerFast` with `max_length=512`
 - Train both versions with their respective hyperparameters
 - Log all metrics to W&B (loss, accuracy, F1, hyperparams per run)
 - Save `eval_report_v1.json` and `eval_report_v2.json` as W&B artifacts
-- Push the **best model (v2)** and tokenizer to Hugging Face Hub
+- Push the **best model (v1)** and tokenizer to Hugging Face Hub
 
 ---
 
